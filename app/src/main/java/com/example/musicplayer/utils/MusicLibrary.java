@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.widget.Toast;
 
 import com.example.musicplayer.models.AlbumModel;
 
@@ -46,8 +45,7 @@ public class MusicLibrary {
                 // that represents the media file.
                 albums.add(new AlbumModel(contentUri, name, artist, size));
             }
-
-        Toast.makeText(context, "Size is" + albums.size(), Toast.LENGTH_SHORT).show();
+        cursor.close();
         return albums;
     }
 }
