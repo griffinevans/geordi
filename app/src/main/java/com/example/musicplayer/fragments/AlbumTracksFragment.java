@@ -1,7 +1,6 @@
 package com.example.musicplayer.fragments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,33 +12,28 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.R;
-import com.example.musicplayer.activities.AlbumActivity;
-import com.example.musicplayer.adapters.AlbumsAdapter;
-import com.example.musicplayer.models.AlbumModel;
+import com.example.musicplayer.adapters.AlbumTracksAdapter;
 import com.example.musicplayer.utils.MusicLibrary;
-
-import java.util.List;
 
 /**
  * A fragment representing a list of Items.
- * //TODO make tabs swipeable
  */
-public class AlbumsListFragment extends Fragment implements AlbumsAdapter.ItemClickListener {
+public class AlbumTracksFragment extends Fragment {
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
-    private long[] albumIDs;
-
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public AlbumsListFragment() {
+    public AlbumTracksFragment() {
     }
 
-    public static AlbumsListFragment newInstance(int columnCount) {
-        AlbumsListFragment fragment = new AlbumsListFragment();
+    // TODO: Customize parameter initialization
+    @SuppressWarnings("unused")
+    public static AlbumTracksFragment newInstance(int columnCount) {
+        AlbumTracksFragment fragment = new AlbumTracksFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_COLUMN_COUNT, columnCount);
         fragment.setArguments(args);
@@ -58,37 +52,22 @@ public class AlbumsListFragment extends Fragment implements AlbumsAdapter.ItemCl
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_albums_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_album_tracks_list, container, false);
 
         // Set the adapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
-            List<AlbumModel> albumModelList = new MusicLibrary().getAllAlbums(getContext());
+            Bundle extras = getActivity().getIntent().getExtras();
+            long id = (long) extras.get("ALBUM_ID");
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setHasFixedSize(true);
-            AlbumsAdapter adapter = new AlbumsAdapter(getContext(), albumModelList);
-            albumIDs = new long[albumModelList.size()];
-            for(int i = 0; i < albumModelList.size(); i++) {
-                albumIDs[i] = adapter.getAlbumID(i);
-            }
-            adapter.setClickListener(this);
+            AlbumTracksAdapter adapter = new AlbumTracksAdapter(new MusicLibrary().getTracksForAlbum(context, id));
             recyclerView.setAdapter(adapter);
         }
         return view;
-    }
-
-    /**
-     * Select an album to view
-     */
-    @Override
-    public void onItemClick(View view, int position) {
-        Intent i = new Intent(getContext(), AlbumActivity.class);
-        i.putExtra("ALBUM_ID", albumIDs[position]);
-        startActivity(i);
     }
 }

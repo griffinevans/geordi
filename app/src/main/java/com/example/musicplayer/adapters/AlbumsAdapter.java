@@ -28,7 +28,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.album_list_view, parent, false);
+        View view = mInflater.inflate(R.layout.fragment_album, parent, false);
         return new ViewHolder(view);
     }
 
@@ -36,7 +36,8 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         AlbumModel model = mData.get(position);
-        holder.myTextView.setText(model.name());
+        holder.albumNameTextView.setText(model.getName());
+        holder.albumArtistTextView.setText(model.getArtist());
     }
 
     // total number of rows
@@ -48,11 +49,13 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+        TextView albumNameTextView;
+        TextView albumArtistTextView;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.album_name_text);
+            albumNameTextView = itemView.findViewById(R.id.album_name_text);
+            albumArtistTextView = itemView.findViewById(R.id.album_artist_text);
             itemView.setOnClickListener(this);
         }
 
@@ -63,9 +66,10 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
     }
 
     // convenience method for getting data at click position
-    AlbumModel getItem(int id) {
+    public AlbumModel getItem(int id) {
         return mData.get(id);
     }
+    public long getAlbumID(int position) { return mData.get(position).getId(); }
 
     // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {

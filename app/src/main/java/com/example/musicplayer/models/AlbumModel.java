@@ -1,22 +1,23 @@
 package com.example.musicplayer.models;
 
-import android.net.Uri;
-
 public class AlbumModel {
-    private final Uri uri;
+    private final long id;
     private final String name;
     private final String artist;
+    //private final int albumID;
     private final int size;
 
-    public AlbumModel(Uri uri, String name, String artist, int size) {
-        this.uri = uri;
+    public AlbumModel(long id, String name, String artist, int size) {
+        this.id = id;
         this.name = name;
         this.artist = artist;
+        //this.albumID = albumID;
         this.size = size;
     }
 
-    public Uri uri() { return uri; }
-    public String name() { return name; }
-    public String artist() { return artist; }
-    public int size() { return size; }
+    public long getId() { return id; }
+    public String getName() { return name; }
+    public String getArtist() { return artist; }
+    //public int getAlbumID() { return albumID; }
+    public int getSize() { return size; }
 }
