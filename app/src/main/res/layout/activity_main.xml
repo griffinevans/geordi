@@ -47,7 +47,7 @@
         tools:layout="@layout/fragment_albums_list" />
 
     <fragment
-        android:name="com.example.musicplayer.fragments.CurrentlyPlaying"
+        android:name="com.example.musicplayer.fragments.CurrentlyPlayingFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"

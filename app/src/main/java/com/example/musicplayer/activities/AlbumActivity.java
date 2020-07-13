@@ -1,7 +1,9 @@
 package com.example.musicplayer.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,5 +21,14 @@ public class AlbumActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_album, menu);
         return true;
+    }
+
+    public void musicBarClick(View view) {
+        Intent i = new Intent(this, PlayerActivity.class);
+        startActivity(i);
+    }
+
+    public void musicBarControls(View view) {
+        //TODO
     }
 }

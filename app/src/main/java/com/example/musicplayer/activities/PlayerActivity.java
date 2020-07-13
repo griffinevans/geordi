@@ -1,18 +1,22 @@
 package com.example.musicplayer.activities;
 
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import com.example.musicplayer.R;
+import com.example.musicplayer.models.TrackModel;
 import com.example.musicplayer.service.MusicPlayerService;
 
 public class PlayerActivity extends AppCompatActivity {
@@ -20,56 +24,93 @@ public class PlayerActivity extends AppCompatActivity {
     private MusicPlayerService mService;
     boolean mBound = false;
     private static final String TAG = "PlayerActivity";
+    SeekBar seekBar;
+    Runnable runSeekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        String nowPlaying = "";
-        toolbar.setTitle("Playing from: " + nowPlaying);
-
-    }
-
-    public void menuButtonClick(View v) {
-        //TODO
-    }
-
-    public void mediaPlayButtonClick(View v) {
-        if (mBound) {
-            Boolean bool = mService.playButtonClick();
-            ImageButton button = (ImageButton) findViewById(R.id.mediaPlayButton);
-            if (bool) {
-                button.setImageResource(R.drawable.ic_media_play);
-            } else {
-                button.setImageResource(R.drawable.ic_media_pause);
-            }
-        }
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_player,menu);
+        getMenuInflater().inflate(R.menu.menu_player, menu);
         return true;
     }
 
-    private ServiceConnection mConnection = new ServiceConnection() {
-        // Called when the connection with the service is established
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            // Because we have bound to an explicit
-            // service that is running in our own process, we can
-            // cast its IBinder to a concrete class and directly access it.
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, MusicPlayerService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
             MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
+
+            updateSongInfo(mService.currentTrack());
         }
 
-        // Called when the connection with the service disconnects unexpectedly
-        public void onServiceDisconnected(ComponentName className) {
-            Log.e(TAG, "onServiceDisconnected");
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
             mBound = false;
         }
     };
 
+    //updates the view elements of the player UI. called when track changes.
+    public void updateSongInfo(TrackModel model) {
+        TextView titleView = (TextView) findViewById(R.id.songNameView);
+        TextView artistView = (TextView) findViewById(R.id.artistNameView);
+        TextView albumView = (TextView) findViewById(R.id.albumNameView);
+        //TODO album art
+
+        titleView.setText(model.getTitle());
+        artistView.setText(model.getArtist());
+        albumView.setText(model.getAlbum());
+
+        //initialize SeekBar
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setMax(mService.mediaPlayer.getDuration());
+        final Handler seekHandler = new Handler();
+        runSeekBar = new Runnable() {
+            @Override
+            public void run() {
+                seekBar.setProgress(mService.mediaPlayer.getCurrentPosition());
+                seekHandler.postDelayed(this, 1000);
+            }
+        };
+        runSeekBar.run();
+    }
+
+    public void mediaPlayButtonClick(View v) {
+        if (mBound) {
+            mService.togglePlay();
+            ImageButton button = (ImageButton) findViewById(R.id.mediaPlayButton);
+            if (mService.isPlaying()) {
+                button.setImageResource(R.drawable.ic_media_pause);
+            } else {
+                button.setImageResource(R.drawable.ic_media_play);
+            }
+        }
+    }
+
+    public void musicBarClick(View view) {
+        Intent i = new Intent(this, PlayerActivity.class);
+        startActivity(i);
+    }
+
+    public void musicBarControls(View view) {
+        if (mBound) {
+            mService.togglePlay();
+        }
+    }
 }

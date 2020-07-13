@@ -74,6 +74,8 @@ public class MusicLibrary {
             }
 
         }
+        cursor.close();
         return tracks;
     }
+
 }

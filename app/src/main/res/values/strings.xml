@@ -8,4 +8,6 @@
     <string name="album_title">Album Title</string>
     <string name="artist_name">Artist Name</string>
     <string name="track_name">Track Name</string>
+    <string name="channel_name">Music Player Service</string>
+    <string name="channel_description">plays music</string>
 </resources>
