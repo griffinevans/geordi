@@ -44,13 +44,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * We bind to the service when the activity resumes
+     */
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
 
         Intent intent = new Intent(this, MusicPlayerService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
+
+    /**
+     * Unbind the service when the activity is paused
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (connection != null) {
+            unbindService(connection);
+            mBound = false;
+        }
+    }
+
 
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -79,4 +95,5 @@ public class MainActivity extends AppCompatActivity {
             mService.togglePlay();
         }
     }
+
 }

@@ -9,18 +9,18 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.R;
-import com.example.musicplayer.models.AlbumModel;
+import com.example.musicplayer.models.Album;
 
 import java.util.List;
 
 public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder> {
 
-    private List<AlbumModel> mData;
+    private List<Album> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    public AlbumsAdapter(Context context, List<AlbumModel> data) {
+    public AlbumsAdapter(Context context, List<Album> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
     }
@@ -35,7 +35,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        AlbumModel model = mData.get(position);
+        Album model = mData.get(position);
         holder.albumNameTextView.setText(model.getName());
         holder.albumArtistTextView.setText(model.getArtist());
     }
@@ -64,13 +64,6 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.ViewHolder
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
         }
     }
-
-    // convenience method for getting data at click position
-    public AlbumModel getItem(int id) {
-        return mData.get(id);
-    }
-    public long getAlbumID(int position) { return mData.get(position).getId(); }
-
     // allows clicks events to be caught
     public void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;

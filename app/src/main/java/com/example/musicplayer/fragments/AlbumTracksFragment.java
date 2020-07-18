@@ -13,7 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.R;
 import com.example.musicplayer.adapters.AlbumTracksAdapter;
-import com.example.musicplayer.utils.MusicLibrary;
+import com.example.musicplayer.models.Album;
+import com.example.musicplayer.utils.MediaStoreUtil;
 
 /**
  * A fragment representing a list of Items.
@@ -22,6 +23,8 @@ public class AlbumTracksFragment extends Fragment {
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
+
+    Album album;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -59,15 +62,16 @@ public class AlbumTracksFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
             Bundle extras = getActivity().getIntent().getExtras();
-            long id = (long) extras.get("ALBUM_ID");
+            album = (Album) extras.get("ALBUM");
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            AlbumTracksAdapter adapter = new AlbumTracksAdapter(new MusicLibrary().getTracksForAlbum(context, id));
+            AlbumTracksAdapter adapter = new AlbumTracksAdapter(new MediaStoreUtil().getTracksForAlbum(context, album), context);
             recyclerView.setAdapter(adapter);
         }
         return view;
     }
+
 }

@@ -16,7 +16,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.musicplayer.R;
-import com.example.musicplayer.models.TrackModel;
+import com.example.musicplayer.models.Track;
 import com.example.musicplayer.service.MusicPlayerService;
 
 public class PlayerActivity extends AppCompatActivity {
@@ -39,13 +39,29 @@ public class PlayerActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * We bind to the service when the activity resumes
+     */
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
 
         Intent intent = new Intent(this, MusicPlayerService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
+
+    /**
+     * Unbind the service when the activity is paused
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (connection != null) {
+            unbindService(connection);
+            mBound = false;
+        }
+    }
+
 
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -57,7 +73,9 @@ public class PlayerActivity extends AppCompatActivity {
             mService = binder.getService();
             mBound = true;
 
-            updateSongInfo(mService.currentTrack());
+            if (mService.currentTrack() != null) {
+                updateSongInfo();
+            }
         }
 
         @Override
@@ -66,29 +84,35 @@ public class PlayerActivity extends AppCompatActivity {
         }
     };
 
-    //updates the view elements of the player UI. called when track changes.
-    public void updateSongInfo(TrackModel model) {
-        TextView titleView = (TextView) findViewById(R.id.songNameView);
-        TextView artistView = (TextView) findViewById(R.id.artistNameView);
-        TextView albumView = (TextView) findViewById(R.id.albumNameView);
-        //TODO album art
 
-        titleView.setText(model.getTitle());
-        artistView.setText(model.getArtist());
-        albumView.setText(model.getAlbum());
+    /**
+     * updates the view elements of the player UI. called when track changes.
+     */
+    public void updateSongInfo() {
+        if (mBound) {
+            Track track = mService.currentTrack();
+            TextView titleView = (TextView) findViewById(R.id.songNameView);
+            TextView artistView = (TextView) findViewById(R.id.artistNameView);
+            TextView albumView = (TextView) findViewById(R.id.albumNameView);
+            //TODO album art
 
-        //initialize SeekBar
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
-        seekBar.setMax(mService.mediaPlayer.getDuration());
-        final Handler seekHandler = new Handler();
-        runSeekBar = new Runnable() {
-            @Override
-            public void run() {
-                seekBar.setProgress(mService.mediaPlayer.getCurrentPosition());
-                seekHandler.postDelayed(this, 1000);
-            }
-        };
-        runSeekBar.run();
+            titleView.setText(track.getTrackName());
+            artistView.setText(track.getArtistName());
+            albumView.setText(track.getAlbumName());
+
+            //initialize SeekBar
+            seekBar = (SeekBar) findViewById(R.id.seekBar);
+            seekBar.setMax(mService.mediaPlayer.getDuration());
+            final Handler seekHandler = new Handler();
+            runSeekBar = new Runnable() {
+                @Override
+                public void run() {
+                    seekBar.setProgress(mService.mediaPlayer.getCurrentPosition());
+                    seekHandler.postDelayed(this, 1000);
+                }
+            };
+            runSeekBar.run();
+        }
     }
 
     public void mediaPlayButtonClick(View v) {
@@ -111,6 +135,26 @@ public class PlayerActivity extends AppCompatActivity {
     public void musicBarControls(View view) {
         if (mBound) {
             mService.togglePlay();
+        }
+    }
+
+    /**
+     * Go to previous song if possible
+     */
+    public void prevSongClick(View view) {
+        if (mBound) {
+            mService.previous();
+            updateSongInfo();
+        }
+    }
+
+    /**
+     * go to next song if possible
+     */
+    public void nextSongClick(View view) {
+        if (mBound) {
+            mService.next();
+            updateSongInfo();
         }
     }
 }

@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.musicplayer.R;
 import com.example.musicplayer.activities.AlbumActivity;
 import com.example.musicplayer.adapters.AlbumsAdapter;
-import com.example.musicplayer.models.AlbumModel;
-import com.example.musicplayer.utils.MusicLibrary;
+import com.example.musicplayer.models.Album;
+import com.example.musicplayer.utils.MediaStoreUtil;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class AlbumsListFragment extends Fragment implements AlbumsAdapter.ItemCl
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
-    private long[] albumIDs;
+    List<Album> albumList;
 
 
     /**
@@ -64,18 +64,14 @@ public class AlbumsListFragment extends Fragment implements AlbumsAdapter.ItemCl
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
-            List<AlbumModel> albumModelList = new MusicLibrary().getAllAlbums(getContext());
+            albumList = new MediaStoreUtil().getAllAlbums(getContext());
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
             recyclerView.setHasFixedSize(true);
-            AlbumsAdapter adapter = new AlbumsAdapter(getContext(), albumModelList);
-            albumIDs = new long[albumModelList.size()];
-            for(int i = 0; i < albumModelList.size(); i++) {
-                albumIDs[i] = adapter.getAlbumID(i);
-            }
+            AlbumsAdapter adapter = new AlbumsAdapter(getContext(), albumList);
             adapter.setClickListener(this);
             recyclerView.setAdapter(adapter);
         }
@@ -88,7 +84,7 @@ public class AlbumsListFragment extends Fragment implements AlbumsAdapter.ItemCl
     @Override
     public void onItemClick(View view, int position) {
         Intent i = new Intent(getContext(), AlbumActivity.class);
-        i.putExtra("ALBUM_ID", albumIDs[position]);
+        i.putExtra("ALBUM", albumList.get(position));
         startActivity(i);
     }
 }
