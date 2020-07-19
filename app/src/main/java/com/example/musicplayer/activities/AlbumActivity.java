@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -86,7 +87,17 @@ public class AlbumActivity extends AppCompatActivity {
     };
 
     public void musicBarControls(View view) {
-        //TODO
+        if (mBound) {
+            mService.togglePlay();
+            ImageButton button = findViewById(R.id.musicbar_play_controls);
+            if (mService.isPlaying()) {
+                button.setImageResource(R.drawable.ic_media_pause);
+            } else {
+                button.setImageResource(R.drawable.ic_media_play);
+            }
+        } else {
+            Log.e(TAG, "Not bound");
+        }
     }
 
     public void onTrackSelect(Track model) {

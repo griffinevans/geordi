@@ -63,16 +63,17 @@
         android:id="@+id/mediaPlayButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:scaleType="fitCenter"
-        android:tint="#000000"
+        android:tint="@color/colorPrimaryDark"
         android:onClick="mediaPlayButtonClick"
+        android:src="@drawable/ic_media_pause"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/albumArt"
-        app:layout_constraintVertical_bias="0.26"
-        app:srcCompat="@android:drawable/ic_media_play" />
+        app:layout_constraintVertical_bias="0.26" />
 
     <ImageButton
         android:id="@+id/mediaBackButton"
@@ -82,12 +83,12 @@
         android:scaleType="fitCenter"
         android:tint="#000000"
         android:onClick="prevSongClick"
+        android:src="@android:drawable/ic_media_previous"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/mediaPlayButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/seekBar"
-        app:layout_constraintVertical_bias="0.14"
-        app:srcCompat="@android:drawable/ic_media_previous" />
+        app:layout_constraintVertical_bias="0.14" />
 
     <ImageButton
         android:id="@+id/mediaNextButton"
@@ -96,12 +97,12 @@
         android:background="@android:color/transparent"
         android:tint="#000000"
         android:onClick="nextSongClick"
+        android:src="@android:drawable/ic_media_next"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/mediaPlayButton"
         app:layout_constraintTop_toBottomOf="@+id/seekBar"
-        app:layout_constraintVertical_bias="0.14"
-        app:srcCompat="@android:drawable/ic_media_next" />
+        app:layout_constraintVertical_bias="0.14" />
 
 
     <LinearLayout
@@ -119,7 +120,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
-            android:text="Song Name"
             android:textAlignment="center"
             android:textSize="24sp" />
 
@@ -128,7 +128,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
-            android:text="Album Name"
             android:textAlignment="center"
             android:textSize="24sp" />
 
@@ -136,7 +135,6 @@
             android:id="@+id/artistNameView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="Artist Name"
             android:layout_margin="5dp"
             android:textAlignment="center"
             android:textSize="24sp" />

@@ -22,24 +22,27 @@ import com.example.musicplayer.utils.MediaStoreUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.ListIterator;
+import java.util.Timer;
 
 import static android.content.ContentValues.TAG;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
 
     private NotificationManager mNM;
-    public MediaPlayer mediaPlayer = null;
+    private MediaPlayer mediaPlayer = null;
     private final IBinder mBinder = new LocalBinder();
     MediaStoreUtil mediaStoreUtil;
     private Track currentTrack = null;
     //We use an ArrayList and an Iterator to track where the previous and next methods go.
     private ArrayList<Track> trackQueue;
-    ListIterator<Track> listIterator;
+    private int index;
 
     private boolean isPrepared = false;
 
     private boolean repeatSong = false;
+
+    private boolean mBound = false;
+    private Timer stopServiceTimer = new Timer();
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
@@ -130,7 +133,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
     @Override
     public void onPrepared(MediaPlayer mp) {
         isPrepared = true;
-        mediaPlayer.start();
+        resume();
     }
 
     /**
@@ -139,10 +142,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
      * @return True if there is another song in the queue to move to
      */
     private boolean moveToNext() {
-        if (listIterator.hasNext()) {
-            currentTrack = listIterator.next();
+        if (index < trackQueue.size() - 1) {
+            index++;
+            currentTrack = trackQueue.get(index);
             return true;
         } else {
+            Log.e(TAG, "Could not move to next track");
             return false;
         }
     }
@@ -153,10 +158,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
      * @return True if current track was moved back, false if no previous track found
      */
     private boolean moveToPrevious() {
-        if (listIterator.hasPrevious()) {
-            currentTrack = listIterator.previous();
+        if (index > 1) {
+            index--;
+            currentTrack = trackQueue.get(index);
             return true;
         } else {
+            Log.e(TAG, "Could not move to next track");
             return false;
         }
     }
@@ -222,22 +229,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
         return false;
     }
 
-    public Track currentTrack() {
+    public Track getCurrentTrack() {
         return currentTrack;
-    }
-
-    private void pause() {
-        if (isPlaying()) {
-            mediaPlayer.pause();
-        }
-    }
-
-    private void resume() {
-        if (mediaPlayer != null && isPrepared) {
-            mediaPlayer.start();
-        } else {
-            Toast.makeText(this, "Error: mediaPlayer not initialized", Toast.LENGTH_LONG).show();
-        }
     }
 
     /**
@@ -262,23 +255,65 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
      * @param startTrack track to start playing from
      */
     public void playAlbum(Album album, Track startTrack) {
-        Log.d(TAG, "Playing " + startTrack.getTrackName());
-        currentTrack = startTrack;
+        Log.i(TAG, "Playing " + startTrack.getAlbumName());
         //make the queue
         trackQueue = (ArrayList<Track>) mediaStoreUtil.getTracksForAlbum(getApplicationContext(), album);
-        listIterator = trackQueue.listIterator();
-        Track tempTrack = listIterator.next();
+        index = 0;
+        currentTrack = trackQueue.get(index);
+
         //iterate over album until we find desired track
-        while (!tempTrack.getAlbumKey().equals(startTrack.getAlbumKey()) && listIterator.hasNext()) {
-            tempTrack = listIterator.next();
+        while (index < trackQueue.size() && currentTrack.getTrackId() != startTrack.getTrackId()) {
+            currentTrack = trackQueue.get(index);
+            index++;
         }
         playCurrentTrack();
+    }
+
+    /**
+     * Jumps to an integer timestamp
+     */
+    public void seekTo(int time) {
+        if (isPrepared && mediaPlayer != null) {
+            mediaPlayer.seekTo(time);
+        }
+    }
+
+    public int getSongDuration() {
+        if (isPrepared && mediaPlayer != null) {
+            return mediaPlayer.getDuration();
+        } else {
+            return 0;
+        }
+    }
+
+    public int getSongProgress() {
+        if (isPrepared && mediaPlayer != null) {
+            return mediaPlayer.getCurrentPosition();
+        } else {
+            return 0;
+        }
+    }
+
+    private void pause() {
+        if (isPlaying()) {
+            mediaPlayer.pause();
+        }
+    }
+
+    private void resume() {
+        if (mediaPlayer != null && isPrepared) {
+            mediaPlayer.start();
+            broadcastTrackChange();
+        } else {
+            Log.e(TAG, "MediaPlayer could not resume");
+        }
     }
 
     /**
      * Creates MediaPlayer with current track and plays it.
      */
     private void playCurrentTrack() {
+        Log.i(TAG, "Playing track " + currentTrack.getTrackName());
         if (mediaPlayer != null) {
             mediaPlayer.reset();
             isPrepared = false;
@@ -300,6 +335,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnErrorLi
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.prepareAsync();
+    }
+
+    /**
+     * Notify any listeners that the track has changed, so that they can update.
+     * Contains an instance of the track for fragments, which can't access it through binding
+     */
+    private void broadcastTrackChange() {
+        Intent intent = new Intent();
+        intent.setAction("com.example.broadcast.TRACK_CHANGED");
+        intent.putExtra("TRACK", currentTrack);
+        sendBroadcast(intent);
     }
 
 }

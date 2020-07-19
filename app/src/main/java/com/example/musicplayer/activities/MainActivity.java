@@ -9,7 +9,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -20,6 +22,7 @@ import com.example.musicplayer.service.MusicPlayerService;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     MusicPlayerService mService;
     boolean mBound = false;
 
@@ -67,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+    }
 
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -93,7 +101,14 @@ public class MainActivity extends AppCompatActivity {
     public void musicBarControls(View view) {
         if (mBound) {
             mService.togglePlay();
+            ImageButton button = findViewById(R.id.musicbar_play_controls);
+            if (mService.isPlaying()) {
+                button.setImageResource(R.drawable.ic_media_pause);
+            } else {
+                button.setImageResource(R.drawable.ic_media_play);
+            }
+        } else {
+            Log.e(TAG, "Not bound");
         }
     }
-
 }

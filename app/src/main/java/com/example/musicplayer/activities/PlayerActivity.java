@@ -1,12 +1,16 @@
 package com.example.musicplayer.activities;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageButton;
@@ -26,6 +30,7 @@ public class PlayerActivity extends AppCompatActivity {
     private static final String TAG = "PlayerActivity";
     SeekBar seekBar;
     Runnable runSeekBar;
+    BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,19 @@ public class PlayerActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, MusicPlayerService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+        //receives a broadcast that the track has been updated from the service
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (mBound) {
+                    updateSongInfo();
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        filter.addAction("com.example.broadcast.TRACK_CHANGED");
+        this.registerReceiver(broadcastReceiver, filter);
     }
 
     /**
@@ -60,6 +78,7 @@ public class PlayerActivity extends AppCompatActivity {
             unbindService(connection);
             mBound = false;
         }
+        unregisterReceiver(broadcastReceiver);
     }
 
 
@@ -73,9 +92,7 @@ public class PlayerActivity extends AppCompatActivity {
             mService = binder.getService();
             mBound = true;
 
-            if (mService.currentTrack() != null) {
-                updateSongInfo();
-            }
+            updateSongInfo();
         }
 
         @Override
@@ -86,14 +103,14 @@ public class PlayerActivity extends AppCompatActivity {
 
 
     /**
-     * updates the view elements of the player UI. called when track changes.
+     * updates the view elements of the player UI. called by the viewmodel.
      */
     public void updateSongInfo() {
-        if (mBound) {
-            Track track = mService.currentTrack();
-            TextView titleView = (TextView) findViewById(R.id.songNameView);
-            TextView artistView = (TextView) findViewById(R.id.artistNameView);
-            TextView albumView = (TextView) findViewById(R.id.albumNameView);
+        if (mBound && mService.getCurrentTrack() != null) {
+            Track track = mService.getCurrentTrack();
+            TextView titleView = findViewById(R.id.songNameView);
+            TextView artistView = findViewById(R.id.artistNameView);
+            TextView albumView = findViewById(R.id.albumNameView);
             //TODO album art
 
             titleView.setText(track.getTrackName());
@@ -101,40 +118,36 @@ public class PlayerActivity extends AppCompatActivity {
             albumView.setText(track.getAlbumName());
 
             //initialize SeekBar
-            seekBar = (SeekBar) findViewById(R.id.seekBar);
-            seekBar.setMax(mService.mediaPlayer.getDuration());
+            seekBar = findViewById(R.id.seekBar);
+            seekBar.setMax(mService.getSongDuration());
             final Handler seekHandler = new Handler();
             runSeekBar = new Runnable() {
                 @Override
                 public void run() {
-                    seekBar.setProgress(mService.mediaPlayer.getCurrentPosition());
+                    seekBar.setProgress(mService.getSongProgress());
                     seekHandler.postDelayed(this, 1000);
                 }
             };
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    if (mBound) {
+                        int time = seekBar.getProgress();
+                        mService.seekTo(time);
+                    }
+                }
+            });
             runSeekBar.run();
-        }
-    }
-
-    public void mediaPlayButtonClick(View v) {
-        if (mBound) {
-            mService.togglePlay();
-            ImageButton button = (ImageButton) findViewById(R.id.mediaPlayButton);
-            if (mService.isPlaying()) {
-                button.setImageResource(R.drawable.ic_media_pause);
-            } else {
-                button.setImageResource(R.drawable.ic_media_play);
-            }
-        }
-    }
-
-    public void musicBarClick(View view) {
-        Intent i = new Intent(this, PlayerActivity.class);
-        startActivity(i);
-    }
-
-    public void musicBarControls(View view) {
-        if (mBound) {
-            mService.togglePlay();
         }
     }
 
@@ -144,7 +157,6 @@ public class PlayerActivity extends AppCompatActivity {
     public void prevSongClick(View view) {
         if (mBound) {
             mService.previous();
-            updateSongInfo();
         }
     }
 
@@ -154,7 +166,20 @@ public class PlayerActivity extends AppCompatActivity {
     public void nextSongClick(View view) {
         if (mBound) {
             mService.next();
-            updateSongInfo();
+        }
+    }
+
+    public void mediaPlayButtonClick(View view) {
+        if (mBound) {
+            mService.togglePlay();
+            ImageButton button = findViewById(R.id.mediaPlayButton);
+            if (mService.isPlaying()) {
+                button.setImageResource(R.drawable.ic_media_pause);
+            } else {
+                button.setImageResource(R.drawable.ic_media_play);
+            }
+        } else {
+            Log.e(TAG, "Not bound");
         }
     }
 }
